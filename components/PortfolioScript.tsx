@@ -635,45 +635,53 @@ export default function PortfolioScript() {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;
 
-    // Evidence Gallery - Drag to Scroll (Kinetic)
-    const evidenceScroll = document.getElementById('evidence-scroll');
-    let isDragging = false, dragStartX = 0, dragScrollLeft = 0, dragMoved = false;
+    // Evidence Gallery - 3D Sphere Drag to Rotate
+    const sphereScene = document.getElementById('sphere-scene');
+    let isDragging = false, dragStartX = 0, dragStartY = 0, dragMoved = false;
+    let sphereRotY = 0, sphereRotX = 0;
 
     const onDragStart = (e) => {
-        if (!evidenceScroll) return;
+        if (!sphereScene) return;
         isDragging = true;
         dragMoved = false;
-        evidenceScroll.classList.add('dragging');
-        dragStartX = (e.touches ? e.touches[0].pageX : e.pageX) - evidenceScroll.offsetLeft;
-        dragScrollLeft = evidenceScroll.scrollLeft;
+        sphereScene.classList.add('dragging');
+        dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
+        dragStartY = e.touches ? e.touches[0].clientY : e.clientY;
     };
     const onDragMove = (e) => {
-        if (!isDragging || !evidenceScroll) return;
-        e.preventDefault();
-        const x = (e.touches ? e.touches[0].pageX : e.pageX) - evidenceScroll.offsetLeft;
-        const walk = x - dragStartX;
-        if (Math.abs(walk) > 5) dragMoved = true;
-        evidenceScroll.scrollLeft = dragScrollLeft - walk;
+        if (!isDragging || !sphereScene) return;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = x - dragStartX;
+        const dy = y - dragStartY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
+        sphereRotY += dx * 0.3;
+        sphereRotX -= dy * 0.3;
+        sphereRotX = Math.max(-80, Math.min(80, sphereRotX));
+        sphereScene.style.transform = `rotateY(${sphereRotY}deg) rotateX(${sphereRotX}deg)`;
+        dragStartX = x;
+        dragStartY = y;
     };
     const onDragEnd = () => {
-        if (!evidenceScroll) return;
+        if (!sphereScene) return;
         isDragging = false;
-        evidenceScroll.classList.remove('dragging');
+        sphereScene.classList.remove('dragging');
     };
 
-    if (evidenceScroll) {
-        evidenceScroll.addEventListener('mousedown', onDragStart);
-        evidenceScroll.addEventListener('mousemove', onDragMove);
-        evidenceScroll.addEventListener('mouseup', onDragEnd);
-        evidenceScroll.addEventListener('mouseleave', onDragEnd);
-        evidenceScroll.addEventListener('touchstart', onDragStart);
-        evidenceScroll.addEventListener('touchmove', onDragMove);
-        evidenceScroll.addEventListener('touchend', onDragEnd);
+    if (sphereScene) {
+        sphereScene.addEventListener('mousedown', onDragStart);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+        sphereScene.addEventListener('touchstart', onDragStart);
+        sphereScene.addEventListener('touchmove', onDragMove);
+        sphereScene.addEventListener('touchend', onDragEnd);
 
-        // Prevent click-to-lightbox firing right after a drag
-        evidenceScroll.addEventListener('click', (e) => {
+        sphereScene.addEventListener('click', (e) => {
             if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
         }, true);
+
+        sphereScene.addEventListener('mouseenter', () => sphereScene.classList.add('paused'));
+        sphereScene.addEventListener('mouseleave', () => { if (!isDragging) sphereScene.classList.remove('paused'); });
     }
 
 
@@ -740,14 +748,13 @@ export default function PortfolioScript() {
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
-      if (evidenceScroll) {
-        evidenceScroll.removeEventListener('mousedown', onDragStart);
-        evidenceScroll.removeEventListener('mousemove', onDragMove);
-        evidenceScroll.removeEventListener('mouseup', onDragEnd);
-        evidenceScroll.removeEventListener('mouseleave', onDragEnd);
-        evidenceScroll.removeEventListener('touchstart', onDragStart);
-        evidenceScroll.removeEventListener('touchmove', onDragMove);
-        evidenceScroll.removeEventListener('touchend', onDragEnd);
+      if (sphereScene) {
+        sphereScene.removeEventListener('mousedown', onDragStart);
+        window.removeEventListener('mousemove', onDragMove);
+        window.removeEventListener('mouseup', onDragEnd);
+        sphereScene.removeEventListener('touchstart', onDragStart);
+        sphereScene.removeEventListener('touchmove', onDragMove);
+        sphereScene.removeEventListener('touchend', onDragEnd);
       }
     };
   }, []);
