@@ -635,56 +635,6 @@ export default function PortfolioScript() {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;
 
-    // Evidence Gallery - 3D Sphere Drag to Rotate
-    const sphereScene = document.getElementById('sphere-scene');
-    let isDragging = false, dragStartX = 0, dragStartY = 0, dragMoved = false;
-    let sphereRotY = 0, sphereRotX = 0;
-
-    const onDragStart = (e) => {
-        if (!sphereScene) return;
-        isDragging = true;
-        dragMoved = false;
-        sphereScene.classList.add('dragging');
-        dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
-        dragStartY = e.touches ? e.touches[0].clientY : e.clientY;
-    };
-    const onDragMove = (e) => {
-        if (!isDragging || !sphereScene) return;
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        const dx = x - dragStartX;
-        const dy = y - dragStartY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
-        sphereRotY += dx * 0.3;
-        sphereRotX -= dy * 0.3;
-        sphereRotX = Math.max(-80, Math.min(80, sphereRotX));
-        sphereScene.style.transform = `rotateY(${sphereRotY}deg) rotateX(${sphereRotX}deg)`;
-        dragStartX = x;
-        dragStartY = y;
-    };
-    const onDragEnd = () => {
-        if (!sphereScene) return;
-        isDragging = false;
-        sphereScene.classList.remove('dragging');
-    };
-
-    if (sphereScene) {
-        sphereScene.addEventListener('mousedown', onDragStart);
-        window.addEventListener('mousemove', onDragMove);
-        window.addEventListener('mouseup', onDragEnd);
-        sphereScene.addEventListener('touchstart', onDragStart);
-        sphereScene.addEventListener('touchmove', onDragMove);
-        sphereScene.addEventListener('touchend', onDragEnd);
-
-        sphereScene.addEventListener('click', (e) => {
-            if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
-        }, true);
-
-        sphereScene.addEventListener('mouseenter', () => sphereScene.classList.add('paused'));
-        sphereScene.addEventListener('mouseleave', () => { if (!isDragging) sphereScene.classList.remove('paused'); });
-    }
-
-
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); }
     };
@@ -748,14 +698,6 @@ export default function PortfolioScript() {
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
-      if (sphereScene) {
-        sphereScene.removeEventListener('mousedown', onDragStart);
-        window.removeEventListener('mousemove', onDragMove);
-        window.removeEventListener('mouseup', onDragEnd);
-        sphereScene.removeEventListener('touchstart', onDragStart);
-        sphereScene.removeEventListener('touchmove', onDragMove);
-        sphereScene.removeEventListener('touchend', onDragEnd);
-      }
     };
   }, []);
 

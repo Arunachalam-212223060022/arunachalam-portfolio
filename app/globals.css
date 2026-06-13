@@ -327,11 +327,3 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 .lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: 1px solid var(--accent); color: #fff; font-size: 1.2rem; width: 36px; height: 36px; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; }
 .lightbox-close:hover { background: var(--accent); color: #000; }
 
-/* 3D Photo Sphere Gallery */
-.sphere-container { height: 620px; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1600px; margin: 20px 0 50px; overflow: hidden; }
-.sphere-scene { position: relative; width: 220px; height: 160px; transform-style: preserve-3d; animation: sphereSpin 50s infinite linear; cursor: grab; }
-.sphere-scene.dragging { animation-play-state: paused; cursor: grabbing; }
-.sphere-scene.paused { animation-play-state: paused; }
-@keyframes sphereSpin { 0% { transform: rotateY(0deg) rotateX(0deg); } 100% { transform: rotateY(360deg) rotateX(0deg); } }
-.sphere-tile { position: absolute; top: 0; left: 0; width: 150px; height: 100px; margin: -50px -75px; border-radius: 6px; border: 1px solid rgba(var(--accent-rgb), 0.4); background-size: cover; background-position: center; box-shadow: 0 0 25px rgba(0,0,0,0.6), 0 0 18px rgba(var(--accent-rgb), 0.15); cursor: pointer; transition: border-color 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease; backface-visibility: visible; filter: brightness(0.85); }
-.sphere-tile:hover { border-color: var(--accent-alt); box-shadow: 0 0 35px rgba(var(--accent-alt-rgb), 0.5); filter: brightness(1.1); z-index: 50; }
