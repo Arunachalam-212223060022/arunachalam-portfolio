@@ -635,6 +635,48 @@ export default function PortfolioScript() {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;
 
+    // Evidence Gallery - Drag to Scroll (Kinetic)
+    const evidenceScroll = document.getElementById('evidence-scroll');
+    let isDragging = false, dragStartX = 0, dragScrollLeft = 0, dragMoved = false;
+
+    const onDragStart = (e) => {
+        if (!evidenceScroll) return;
+        isDragging = true;
+        dragMoved = false;
+        evidenceScroll.classList.add('dragging');
+        dragStartX = (e.touches ? e.touches[0].pageX : e.pageX) - evidenceScroll.offsetLeft;
+        dragScrollLeft = evidenceScroll.scrollLeft;
+    };
+    const onDragMove = (e) => {
+        if (!isDragging || !evidenceScroll) return;
+        e.preventDefault();
+        const x = (e.touches ? e.touches[0].pageX : e.pageX) - evidenceScroll.offsetLeft;
+        const walk = x - dragStartX;
+        if (Math.abs(walk) > 5) dragMoved = true;
+        evidenceScroll.scrollLeft = dragScrollLeft - walk;
+    };
+    const onDragEnd = () => {
+        if (!evidenceScroll) return;
+        isDragging = false;
+        evidenceScroll.classList.remove('dragging');
+    };
+
+    if (evidenceScroll) {
+        evidenceScroll.addEventListener('mousedown', onDragStart);
+        evidenceScroll.addEventListener('mousemove', onDragMove);
+        evidenceScroll.addEventListener('mouseup', onDragEnd);
+        evidenceScroll.addEventListener('mouseleave', onDragEnd);
+        evidenceScroll.addEventListener('touchstart', onDragStart);
+        evidenceScroll.addEventListener('touchmove', onDragMove);
+        evidenceScroll.addEventListener('touchend', onDragEnd);
+
+        // Prevent click-to-lightbox firing right after a drag
+        evidenceScroll.addEventListener('click', (e) => {
+            if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
+        }, true);
+    }
+
+
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); }
     };
@@ -698,6 +740,15 @@ export default function PortfolioScript() {
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
+      if (evidenceScroll) {
+        evidenceScroll.removeEventListener('mousedown', onDragStart);
+        evidenceScroll.removeEventListener('mousemove', onDragMove);
+        evidenceScroll.removeEventListener('mouseup', onDragEnd);
+        evidenceScroll.removeEventListener('mouseleave', onDragEnd);
+        evidenceScroll.removeEventListener('touchstart', onDragStart);
+        evidenceScroll.removeEventListener('touchmove', onDragMove);
+        evidenceScroll.removeEventListener('touchend', onDragEnd);
+      }
     };
   }, []);
 

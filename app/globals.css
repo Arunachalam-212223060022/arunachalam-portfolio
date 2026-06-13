@@ -113,19 +113,30 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 /* Extra Traces */
 .hex-traces { position: absolute; inset: -40px; z-index: 0; pointer-events: none; }
 
-/* Layer 4: Floating 3D RV32I Cube */
-.floating-chip { position: absolute; top: 0px; right: -20px; width: 70px; height: 70px; transform-style: preserve-3d; animation: rotateDie 12s infinite linear; z-index: 5; pointer-events: none; }
+/* Layer 4: Floating 3D RV32I IC Chip */
+.floating-chip { position: absolute; top: 0px; right: -10px; width: 90px; height: 90px; transform-style: preserve-3d; animation: rotateDie 14s infinite linear; z-index: 5; pointer-events: none; }
 @keyframes rotateDie { 
-    0% { transform: rotateX(-20deg) rotateY(0deg) rotateZ(10deg); } 
-    100% { transform: rotateX(-20deg) rotateY(360deg) rotateZ(10deg); } 
+    0% { transform: rotateX(-22deg) rotateY(0deg) rotateZ(8deg); } 
+    100% { transform: rotateX(-22deg) rotateY(360deg) rotateZ(8deg); } 
 }
-.fc-face { position: absolute; width: 70px; height: 70px; background: rgba(5,8,16,0.95); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Share Tech Mono', monospace; color: var(--accent-alt); font-size: 14px; font-weight: bold; text-shadow: 0 0 8px var(--accent-alt); box-shadow: inset 0 0 15px rgba(var(--accent-rgb),0.5); }
-.fc-front  { transform: translateZ(35px); border: 2px solid var(--accent-alt); background: rgba(10,14,28,0.95); }
-.fc-back   { transform: rotateY(180deg) translateZ(35px); }
-.fc-right  { transform: rotateY(90deg) translateZ(35px); }
-.fc-left   { transform: rotateY(-90deg) translateZ(35px); }
-.fc-top    { transform: rotateX(90deg) translateZ(35px); }
-.fc-bottom { transform: rotateX(-90deg) translateZ(35px); }
+.fc-face { position: absolute; width: 90px; height: 90px; background: linear-gradient(145deg, #1a1f2e, #050810); border: 1px solid rgba(var(--accent-rgb), 0.4); display: flex; align-items: center; justify-content: center; font-family: 'Share Tech Mono', monospace; color: var(--accent-alt); font-size: 13px; font-weight: bold; text-shadow: 0 0 8px var(--accent-alt); box-shadow: inset 0 0 15px rgba(var(--accent-rgb),0.35); }
+.fc-front  {
+  transform: translateZ(20px);
+  border: 1px solid var(--accent);
+  background:
+    repeating-linear-gradient(to right, rgba(255,200,80,0.9) 0 3px, transparent 3px 12px) top / 100% 4px no-repeat,
+    repeating-linear-gradient(to right, rgba(255,200,80,0.9) 0 3px, transparent 3px 12px) bottom / 100% 4px no-repeat,
+    repeating-linear-gradient(to bottom, rgba(255,200,80,0.9) 0 3px, transparent 3px 12px) left / 4px 100% no-repeat,
+    repeating-linear-gradient(to bottom, rgba(255,200,80,0.9) 0 3px, transparent 3px 12px) right / 4px 100% no-repeat,
+    linear-gradient(145deg, #1c2233, #04060c);
+  box-shadow: inset 0 0 15px rgba(var(--accent-rgb),0.35);
+}
+.fc-front::before { content: ''; position: absolute; top: 7px; left: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-alt); box-shadow: 0 0 6px var(--accent-alt); }
+.fc-back   { transform: rotateY(180deg) translateZ(20px); }
+.fc-right  { transform: rotateY(90deg) translateZ(20px); }
+.fc-left   { transform: rotateY(-90deg) translateZ(20px); }
+.fc-top    { transform: rotateX(90deg) translateZ(20px); }
+.fc-bottom { transform: rotateX(-90deg) translateZ(20px); }
 
 
 /* About */
@@ -137,24 +148,19 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 .focus-item{font-size:1.05rem;color:#fff;display:flex;align-items:center;gap:8px; font-family:'Chakra Petch',sans-serif; letter-spacing:0.05em;}
 .focus-item::before{content:'';width:6px;height:6px;background:var(--accent-alt);display:inline-block;}
 
-/* 3D Radar - Readability Fixed (v2: flat orbital, upright labels) */
-.skills-orbit-container { height: 460px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 60px; overflow: visible; }
-.radar-scene { position: relative; width: 480px; height: 480px; animation: orbitRotate 40s infinite linear; }
-@keyframes orbitRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.radar-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: counterRotateCore 40s infinite linear; font-family: 'Chakra Petch'; font-size: 1.4rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px var(--accent); background: rgba(8,12,24,0.97); border: 2px solid var(--accent); padding: 14px 28px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(var(--accent-rgb),0.5); z-index: 10; letter-spacing: 2px; white-space: nowrap;}
-@keyframes counterRotateCore { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
-.radar-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; border: 2px dashed rgba(var(--accent-rgb), 0.4); box-shadow: inset 0 0 20px rgba(var(--accent-rgb),0.1);}
-.radar-node { position: absolute; top: 50%; left: 50%; width: 0; height: 0; }
-.r-node-label { position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); animation: counterRotateNode 40s infinite linear; font-family: 'Share Tech Mono'; font-size: 0.9rem; font-weight: 700; color: #fff; background: rgba(8,12,24,0.97); border: 1px solid var(--accent-alt); padding: 8px 16px; white-space: nowrap; text-shadow: 0 0 6px rgba(var(--accent-alt-rgb),0.8); box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(var(--accent-alt-rgb),0.25); letter-spacing: 1px;}
-@keyframes counterRotateNode { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
+/* Skill Matrix Grid */
+.skills-intro { display: flex; justify-content: center; margin-bottom: 36px; }
+.skills-core-badge { font-family: 'Share Tech Mono'; letter-spacing: 4px; font-size: 0.85rem; color: var(--accent-alt); border: 1px solid rgba(var(--accent-alt-rgb),0.4); padding: 10px 28px; border-radius: 4px; background: rgba(8,12,24,0.6); text-shadow: 0 0 8px rgba(var(--accent-alt-rgb),0.6); }
+.skills-matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 40px; }
+.skill-card { position: relative; border: 1px solid rgba(var(--accent-rgb), 0.25); background: linear-gradient(160deg, rgba(8,12,24,0.9), rgba(5,8,16,0.95)); padding: 22px 20px 26px; border-radius: 6px; overflow: hidden; transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; }
+.skill-card:hover { border-color: var(--accent); box-shadow: 0 12px 30px rgba(var(--accent-rgb), 0.2), inset 0 0 20px rgba(var(--accent-rgb),0.08); }
+.skill-num { position: absolute; top: 14px; right: 16px; font-family: 'Share Tech Mono'; font-size: 0.75rem; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
+.skill-icon { width: 36px; height: 36px; color: var(--accent); margin-bottom: 14px; filter: drop-shadow(0 0 6px rgba(var(--accent-rgb),0.5)); }
+.skill-title { font-family: 'Chakra Petch'; font-weight: 700; color: #fff; font-size: 1.05rem; margin-bottom: 6px; letter-spacing: 0.5px; }
+.skill-tags { font-family: 'Share Tech Mono'; font-size: 0.78rem; color: var(--accent-alt); line-height: 1.5; }
+.skill-trace { position: absolute; bottom: 0; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-alt)); transition: width 0.5s ease; }
+.skill-card:hover .skill-trace { width: 100%; }
 
-
-/* IC Pinout */
-.chip-container { display: flex; justify-content: center; padding: 60px 0; position:relative; }
-.chip-float { animation: float 6s ease-in-out infinite; transform-origin: center; }
-.chip-scale { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.4s ease; filter: drop-shadow(0 0 30px rgba(var(--accent-rgb),0.15)); }
-.chip-scale:hover { transform: scale(1.03); filter: drop-shadow(0 0 50px rgba(var(--accent-alt-rgb),0.3)); cursor: crosshair; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
 /* Projects */
 .projects-grid{display:grid;grid-template-columns:1fr;gap:48px;}
@@ -331,3 +337,35 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 .lightbox-caption { text-align: center; color: var(--accent-alt); font-family: 'Share Tech Mono'; letter-spacing: 2px; margin-top: 12px; font-size: 0.9rem; }
 .lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: 1px solid var(--accent); color: #fff; font-size: 1.2rem; width: 36px; height: 36px; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; }
 .lightbox-close:hover { background: var(--accent); color: #000; }
+
+/* Evidence Gallery - Block Reveal + Drag Scroll */
+.evidence-scroll { cursor: grab; user-select: none; }
+.evidence-scroll.dragging { cursor: grabbing; scroll-behavior: auto; }
+.evidence-card { position: relative; }
+.reveal-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); z-index: 2; pointer-events: none; }
+.rv-tile { background: #050810; animation: tileReveal 0.5s ease-out forwards; animation-fill-mode: forwards; }
+@keyframes tileReveal { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0); } }
+.rv-tile:nth-child(1) { animation-delay: 0.51s; }
+.rv-tile:nth-child(2) { animation-delay: 0.02s; }
+.rv-tile:nth-child(3) { animation-delay: 0.22s; }
+.rv-tile:nth-child(4) { animation-delay: 0.18s; }
+.rv-tile:nth-child(5) { animation-delay: 0.59s; }
+.rv-tile:nth-child(6) { animation-delay: 0.54s; }
+.rv-tile:nth-child(7) { animation-delay: 0.71s; }
+.rv-tile:nth-child(8) { animation-delay: 0.07s; }
+.rv-tile:nth-child(9) { animation-delay: 0.34s; }
+.rv-tile:nth-child(10) { animation-delay: 0.02s; }
+.rv-tile:nth-child(11) { animation-delay: 0.17s; }
+.rv-tile:nth-child(12) { animation-delay: 0.4s; }
+.rv-tile:nth-child(13) { animation-delay: 0.02s; }
+.rv-tile:nth-child(14) { animation-delay: 0.16s; }
+.rv-tile:nth-child(15) { animation-delay: 0.52s; }
+.rv-tile:nth-child(16) { animation-delay: 0.44s; }
+.rv-tile:nth-child(17) { animation-delay: 0.18s; }
+.rv-tile:nth-child(18) { animation-delay: 0.47s; }
+.rv-tile:nth-child(19) { animation-delay: 0.65s; }
+.rv-tile:nth-child(20) { animation-delay: 0.01s; }
+.rv-tile:nth-child(21) { animation-delay: 0.64s; }
+.rv-tile:nth-child(22) { animation-delay: 0.56s; }
+.rv-tile:nth-child(23) { animation-delay: 0.27s; }
+.rv-tile:nth-child(24) { animation-delay: 0.12s; }
