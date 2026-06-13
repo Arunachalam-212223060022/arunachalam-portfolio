@@ -611,9 +611,42 @@ export default function PortfolioScript() {
     }
     
     function closeModal() { if(modalEl) modalEl.classList.remove('active'); }
-    
+
+    // Expose modal/carousel functions globally so inline onclick handlers work
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.moveCarousel = moveCarousel;
+
+    // Evidence Gallery Lightbox
+    const lightboxEl = document.getElementById('evidence-lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    const galleryGlobe = document.getElementById('gallery-globe');
+
+    function openLightbox(src, caption) {
+        if (!lightboxEl || !lightboxImg) return;
+        lightboxImg.src = src;
+        if (lightboxCaption) lightboxCaption.innerText = caption || '';
+        lightboxEl.classList.add('active');
+        if (galleryGlobe) galleryGlobe.classList.add('paused');
+    }
+    function closeLightbox() {
+        if (!lightboxEl) return;
+        lightboxEl.classList.remove('active');
+        if (galleryGlobe) galleryGlobe.classList.remove('paused');
+    }
+    window.openLightbox = openLightbox;
+    window.closeLightbox = closeLightbox;
+
+    const onGalleryEnter = () => { if (galleryGlobe) galleryGlobe.classList.add('paused'); };
+    const onGalleryLeave = () => { if (galleryGlobe && !lightboxEl.classList.contains('active')) galleryGlobe.classList.remove('paused'); };
+    if (galleryGlobe) {
+        galleryGlobe.addEventListener('mouseenter', onGalleryEnter);
+        galleryGlobe.addEventListener('mouseleave', onGalleryLeave);
+    }
+
     const onEscapeKey = (e) => {
-        if(e.key === 'Escape') closeModal();
+        if(e.key === 'Escape') { closeModal(); closeLightbox(); }
     };
     document.addEventListener('keydown', onEscapeKey);
     
@@ -675,6 +708,10 @@ export default function PortfolioScript() {
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
+      if (galleryGlobe) {
+        galleryGlobe.removeEventListener('mouseenter', onGalleryEnter);
+        galleryGlobe.removeEventListener('mouseleave', onGalleryLeave);
+      }
     };
   }, []);
 
