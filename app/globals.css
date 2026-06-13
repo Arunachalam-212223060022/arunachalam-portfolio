@@ -137,16 +137,17 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 .focus-item{font-size:1.05rem;color:#fff;display:flex;align-items:center;gap:8px; font-family:'Chakra Petch',sans-serif; letter-spacing:0.05em;}
 .focus-item::before{content:'';width:6px;height:6px;background:var(--accent-alt);display:inline-block;}
 
-/* 3D Radar - Readability Fixed */
-.skills-orbit-container { height: 350px; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1200px; margin-bottom: 60px; overflow: hidden; }
-.radar-scene { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateX(65deg); animation: orbitRotate 30s infinite linear; will-change: transform;}
-@keyframes orbitRotate { 0% { transform: rotateX(65deg) rotateZ(0deg); } 100% { transform: rotateX(65deg) rotateZ(360deg); } }
-.radar-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(-65deg); font-family: 'Chakra Petch'; font-size: 1.5rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px var(--accent); background: rgba(8,12,24,0.95); border: 2px solid var(--accent); padding: 12px 24px; border-radius: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(var(--accent-rgb),0.5); z-index: 10; animation: counterRotateCore 30s infinite linear; will-change: transform;}
-@keyframes counterRotateCore { 0% { transform: translate(-50%, -50%) rotateZ(0deg) rotateX(-65deg); } 100% { transform: translate(-50%, -50%) rotateZ(-360deg) rotateX(-65deg); } }
+/* 3D Radar - Readability Fixed (v2: flat orbital, upright labels) */
+.skills-orbit-container { height: 460px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 60px; overflow: visible; }
+.radar-scene { position: relative; width: 480px; height: 480px; animation: orbitRotate 40s infinite linear; }
+@keyframes orbitRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.radar-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: counterRotateCore 40s infinite linear; font-family: 'Chakra Petch'; font-size: 1.4rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px var(--accent); background: rgba(8,12,24,0.97); border: 2px solid var(--accent); padding: 14px 28px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(var(--accent-rgb),0.5); z-index: 10; letter-spacing: 2px; white-space: nowrap;}
+@keyframes counterRotateCore { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
 .radar-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; border: 2px dashed rgba(var(--accent-rgb), 0.4); box-shadow: inset 0 0 20px rgba(var(--accent-rgb),0.1);}
-.radar-node { position: absolute; top: 50%; left: 50%; transform-style: preserve-3d; }
-.r-node-label { position: absolute; transform: translate(-50%, -50%) rotateX(-65deg); font-family: 'Share Tech Mono'; font-size: 0.95rem; color: #fff; background: rgba(8,12,24,0.95); border: 1px solid var(--accent-alt); padding: 8px 14px; white-space: nowrap; animation: counterRotateNode 30s infinite linear; text-shadow: 0 0 5px rgba(255,255,255,0.5); box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(var(--accent-alt-rgb),0.3); will-change: transform;}
-@keyframes counterRotateNode { 0% { transform: translate(-50%, -50%) rotateZ(0deg) rotateX(-65deg); } 100% { transform: translate(-50%, -50%) rotateZ(-360deg) rotateX(-65deg); } }
+.radar-node { position: absolute; top: 50%; left: 50%; width: 0; height: 0; }
+.r-node-label { position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); animation: counterRotateNode 40s infinite linear; font-family: 'Share Tech Mono'; font-size: 0.9rem; font-weight: 700; color: #fff; background: rgba(8,12,24,0.97); border: 1px solid var(--accent-alt); padding: 8px 16px; white-space: nowrap; text-shadow: 0 0 6px rgba(var(--accent-alt-rgb),0.8); box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(var(--accent-alt-rgb),0.25); letter-spacing: 1px;}
+@keyframes counterRotateNode { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
+
 
 /* IC Pinout */
 .chip-container { display: flex; justify-content: center; padding: 60px 0; position:relative; }
