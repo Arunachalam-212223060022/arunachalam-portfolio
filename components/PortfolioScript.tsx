@@ -698,33 +698,6 @@ export default function PortfolioScript() {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;
 
-    // Footer glitch name
-    const glitchEl = document.getElementById('pf-glitch-name');
-    const glitchChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*⚡◈≡';
-    const glitchName = 'ARUNACHALAM P';
-    let glitchActive = false;
-    function runGlitch() {
-      if (glitchActive || !glitchEl) return;
-      glitchActive = true;
-      let frame = 0;
-      function tick() {
-        frame++;
-        glitchEl.textContent = glitchName.split('').map((ch, i) => {
-          if (ch === ' ') return ' ';
-          return (frame > 18 && (i / glitchName.length) * 20 < frame - 18)
-            ? ch
-            : glitchChars[Math.floor(Math.random() * glitchChars.length)];
-        }).join('');
-        if (frame >= 32) { glitchEl.textContent = glitchName; glitchActive = false; return; }
-        requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-    if (glitchEl) {
-      setTimeout(runGlitch, 1200);
-      glitchEl.addEventListener('mouseenter', runGlitch);
-    }
-
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
     };
