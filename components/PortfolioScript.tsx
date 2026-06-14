@@ -54,30 +54,51 @@ export default function PortfolioScript() {
     // ============================================================================
     // 1. SILICON SUBSTRATE (BACKGROUND SIMULATION)
     // ============================================================================
-    // Mount DomeGallery into the gallery placeholder
-    const galleryMount = document.getElementById('gallery-mount');
+    // Gallery Modal - lazy mount DomeGallery on open
+    const galleryModal = document.getElementById('gallery-modal');
+    const galleryDomeMount = document.getElementById('gallery-dome-mount');
     let galleryRoot: any = null;
-    if (galleryMount) {
-      galleryRoot = createRoot(galleryMount);
-      galleryRoot.render(
-        <DomeGallery
-          images={galleryImages}
-          fit={0.68}
-          minRadius={360}
-          maxRadius={780}
-          padFactor={0.1}
-          overlayBlurColor="#060812"
-          grayscale={false}
-          segments={26}
-          dragDampening={1.6}
-          dragSensitivity={22}
-          enlargeTransitionMs={260}
-          imageBorderRadius="6px"
-          openedImageBorderRadius="8px"
-          openedImageWidth="460px"
-          openedImageHeight="340px"
-        />
-      );
+
+    function openGalleryModal() {
+      if (!galleryModal || !galleryDomeMount) return;
+      galleryModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (!galleryRoot) {
+        galleryRoot = createRoot(galleryDomeMount);
+        galleryRoot.render(
+          <DomeGallery
+            images={galleryImages}
+            fit={0.68}
+            minRadius={340}
+            maxRadius={720}
+            padFactor={0.1}
+            overlayBlurColor="#04060e"
+            grayscale={false}
+            segments={26}
+            dragDampening={1.6}
+            dragSensitivity={22}
+            enlargeTransitionMs={260}
+            imageBorderRadius="6px"
+            openedImageBorderRadius="8px"
+            openedImageWidth="440px"
+            openedImageHeight="320px"
+          />
+        );
+      }
+    }
+    function closeGalleryModal() {
+      if (!galleryModal) return;
+      galleryModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    window.openGalleryModal = openGalleryModal;
+    window.closeGalleryModal = closeGalleryModal;
+
+    // Close gallery modal on backdrop click
+    if (galleryModal) {
+      galleryModal.addEventListener('click', (e) => {
+        if (e.target === galleryModal) closeGalleryModal();
+      });
     }
 
     const canvas = document.getElementById('c') as HTMLCanvasElement;
@@ -678,7 +699,7 @@ export default function PortfolioScript() {
     window.closeLightbox = closeLightbox;
 
     const onEscapeKey = (e) => {
-        if(e.key === 'Escape') { closeModal(); closeLightbox(); }
+        if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
     };
     document.addEventListener('keydown', onEscapeKey);
     
