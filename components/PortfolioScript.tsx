@@ -108,7 +108,7 @@ export default function PortfolioScript() {
     const reticle = document.getElementById('reticle') as HTMLElement | null;
     
     let W, H, hexes = [], particles = [], trails = [];
-    const numParticles = 90;
+    const numParticles = 60;
     const R = 22;
     const HW = Math.sqrt(3) * R;
     const RH = 1.5 * R;
@@ -698,6 +698,65 @@ export default function PortfolioScript() {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;
 
+    // Footer: cycling glitch-morph name
+    const morphEl = document.getElementById('pf-morph-name');
+    const morphWords = [
+      'ARUNACHALAM P',
+      'RTL  DESIGNER',
+      'FPGA DEVELOPER',
+      'ASIC  ENGINEER',
+      'RISC-V  BUILDER',
+    ];
+    const scrambleSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
+    let morphIdx = 0;
+    let morphBusy = false;
+
+    function morphToNext() {
+      if (!morphEl || morphBusy) return;
+      morphBusy = true;
+      morphIdx = (morphIdx + 1) % morphWords.length;
+      const target = morphWords[morphIdx];
+
+      // Phase 1: scramble current text for ~300ms
+      let scrambleFrames = 0;
+      const maxScramble = 18;
+      function scrambleTick() {
+        scrambleFrames++;
+        morphEl.textContent = target.split('').map(ch =>
+          ch === ' ' ? ' ' : scrambleSet[Math.floor(Math.random() * scrambleSet.length)]
+        ).join('');
+        if (scrambleFrames < maxScramble) {
+          requestAnimationFrame(scrambleTick);
+        } else {
+          // Phase 2: reveal left-to-right
+          let revealFrame = 0;
+          function revealTick() {
+            revealFrame++;
+            morphEl.textContent = target.split('').map((ch, i) => {
+              if (ch === ' ') return ' ';
+              const revealAt = Math.floor((i / target.length) * 14);
+              return revealFrame > revealAt ? ch : scrambleSet[Math.floor(Math.random() * scrambleSet.length)];
+            }).join('');
+            if (revealFrame < 20) {
+              requestAnimationFrame(revealTick);
+            } else {
+              morphEl.textContent = target;
+              morphBusy = false;
+            }
+          }
+          revealTick();
+        }
+      }
+
+      // Add glitch class for clip-path animation
+      morphEl.classList.add('pf-glitching');
+      setTimeout(() => morphEl.classList.remove('pf-glitching'), 420);
+      scrambleTick();
+    }
+
+    // Auto-cycle every 3.5s
+    const morphInterval = setInterval(morphToNext, 3500);
+
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
     };
@@ -761,6 +820,7 @@ export default function PortfolioScript() {
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
+      if (morphInterval) clearInterval(morphInterval);
       if (galleryRoot) galleryRoot.unmount();
     };
   }, []);

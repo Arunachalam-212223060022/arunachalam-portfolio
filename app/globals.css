@@ -377,10 +377,17 @@ section:first-child{padding-top:140px;min-height: 100vh; display: flex; flex-dir
 .pf-ext-link:hover { color:var(--accent); transform:translateX(-4px); }
 
 /* Big interactive name */
-.pf-bigname { width:100%; text-align:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:clamp(40px,10vw,108px); letter-spacing:-0.02em; line-height:0.9; color:rgba(0,212,255,0.08); padding:40px 0 8px; white-space:nowrap; -webkit-text-stroke:1px rgba(0,212,255,0.12); }
-.pf-letter { display:inline-block; transition:transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275),color 0.25s,-webkit-text-stroke-color 0.25s; cursor:default; }
-.pf-letter:hover { transform:scaleY(1.35) scaleX(0.88) translateY(-12px); color:var(--accent); -webkit-text-stroke-color:var(--accent); }
-.pf-letter-space { width:0.3em; }
+.pf-bigname { width:100%; text-align:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:clamp(36px,8.5vw,100px); letter-spacing:-0.02em; line-height:0.9; color:transparent; padding:40px 0 8px; white-space:nowrap; -webkit-text-stroke:1px rgba(0,212,255,0.12); position:relative; transition:opacity 0.15s ease; cursor:default; user-select:none; }
+.pf-bigname.pf-glitching { animation:pfGlitchClip 0.4s steps(1) forwards; }
+@keyframes pfGlitchClip {
+  0%  { clip-path:inset(0 0 95% 0); -webkit-text-stroke-color:var(--accent); transform:translateX(-4px); }
+  15% { clip-path:inset(15% 0 70% 0); -webkit-text-stroke-color:var(--accent-alt); transform:translateX(4px); }
+  30% { clip-path:inset(40% 0 45% 0); -webkit-text-stroke-color:var(--accent); transform:translateX(-2px); }
+  45% { clip-path:inset(60% 0 20% 0); -webkit-text-stroke-color:var(--accent-alt); transform:translateX(3px); }
+  60% { clip-path:inset(80% 0 5% 0);  -webkit-text-stroke-color:var(--accent); transform:translateX(-3px); }
+  75% { clip-path:inset(0 0 0 0); -webkit-text-stroke-color:rgba(0,212,255,0.18); transform:translateX(0); }
+  100%{ clip-path:inset(0 0 0 0); -webkit-text-stroke-color:rgba(0,212,255,0.12); transform:translateX(0); }
+}
 
 /* Bottom strip */
 .pf-bottom { display:flex; justify-content:space-between; align-items:center; padding:16px 0 24px; border-top:1px solid rgba(255,255,255,0.05); margin-top:8px; }
