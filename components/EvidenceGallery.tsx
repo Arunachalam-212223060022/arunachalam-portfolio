@@ -18,44 +18,67 @@ const galleryImages = [
 
 export default function EvidenceGallery() {
   return (
-    <section
-      id="evidence"
+    <div
       style={{
-        padding: "60px 0",
+        width: "100%",
+        background: "#060812",
         position: "relative",
-        isolation: "isolate",
+        zIndex: 1,
+        contain: "layout paint",
       }}
     >
-      <div className="section-label">05 // Engineering Evidence Gallery</div>
-      <p className="evidence-hint">Drag to rotate · Click any photo to enlarge</p>
       <div
         style={{
-          position: "relative",
-          width: "100%",
-          height: "640px",
-          overflow: "hidden",
-          borderRadius: "4px",
-          isolation: "isolate",
+          maxWidth: "1050px",
+          margin: "0 auto",
+          padding: "60px 24px",
         }}
       >
-        <DomeGallery
-          images={galleryImages}
-          fit={0.68}
-          minRadius={360}
-          maxRadius={780}
-          padFactor={0.1}
-          overlayBlurColor="#060812"
-          grayscale={false}
-          segments={26}
-          dragDampening={1.6}
-          dragSensitivity={22}
-          enlargeTransitionMs={260}
-          imageBorderRadius="6px"
-          openedImageBorderRadius="8px"
-          openedImageWidth="460px"
-          openedImageHeight="340px"
-        />
+        <div
+          className="section-label"
+          style={{ marginBottom: "8px" }}
+        >
+          05 // Engineering Evidence Gallery
+        </div>
+        <p
+          style={{
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: "0.82rem",
+            color: "rgba(255,255,255,0.35)",
+            letterSpacing: "1px",
+            marginBottom: "24px",
+          }}
+        >
+          Drag to rotate · Click any photo to enlarge
+        </p>
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "640px",
+            overflow: "hidden",
+            contain: "strict",
+          }}
+        >
+          <DomeGallery
+            images={galleryImages}
+            fit={0.68}
+            minRadius={360}
+            maxRadius={780}
+            padFactor={0.1}
+            overlayBlurColor="#060812"
+            grayscale={false}
+            segments={26}
+            dragDampening={1.6}
+            dragSensitivity={22}
+            enlargeTransitionMs={260}
+            imageBorderRadius="6px"
+            openedImageBorderRadius="8px"
+            openedImageWidth="460px"
+            openedImageHeight="340px"
+          />
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
