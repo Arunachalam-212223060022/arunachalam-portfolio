@@ -768,6 +768,68 @@ export default function PortfolioScript() {
     // Auto-cycle every 3.5s
     const morphInterval = setInterval(morphToNext, 3500);
 
+    // Gallery trigger - pixel dissolve image cycle
+    const gtcImg = document.getElementById('gtc-img') as HTMLImageElement | null;
+    const gtcGrid = document.getElementById('gtc-pixel-grid');
+    const gtcImages = [
+      '/images/gallery/gallery_01.jpg',
+      '/images/gallery/gallery_05.jpg',
+      '/images/gallery/gallery_07.jpg',
+      '/images/gallery/gallery_08.jpg',
+      '/images/gallery/gallery_03.jpg',
+      '/images/gallery/gallery_02.jpg',
+      '/images/gallery/gallery_10.jpg',
+      '/images/gallery/gallery_06.jpg',
+      '/images/gallery/gallery_09.jpg',
+      '/images/gallery/gallery_11.jpg',
+      '/images/gallery/gallery_04.jpg',
+    ];
+    let gtcIdx = 0;
+    let gtcBusy = false;
+    const GRID = 8;
+
+    if (gtcGrid) {
+      for (let r = 0; r < GRID; r++) {
+        for (let c = 0; c < GRID; c++) {
+          const px = document.createElement('div');
+          px.className = 'gtc-pixel';
+          px.style.width = `${100 / GRID}%`;
+          px.style.height = `${100 / GRID}%`;
+          px.style.left = `${(c / GRID) * 100}%`;
+          px.style.top = `${(r / GRID) * 100}%`;
+          px.style.opacity = '0';
+          gtcGrid.appendChild(px);
+        }
+      }
+    }
+
+    function gtcDissolve() {
+      if (!gtcGrid || !gtcImg || gtcBusy) return;
+      gtcBusy = true;
+      const pixels = Array.from(gtcGrid.children) as HTMLElement[];
+      const shuffled = [...pixels].sort(() => Math.random() - 0.5);
+      const totalMs = 400;
+      const stepMs = totalMs / pixels.length;
+
+      // Show pixels (cover image)
+      shuffled.forEach((px, i) => {
+        setTimeout(() => { px.style.opacity = '1'; }, i * stepMs * 0.5);
+      });
+
+      // Swap image at midpoint, then reveal
+      setTimeout(() => {
+        gtcIdx = (gtcIdx + 1) % gtcImages.length;
+        gtcImg.src = gtcImages[gtcIdx];
+        const shuffled2 = [...pixels].sort(() => Math.random() - 0.5);
+        shuffled2.forEach((px, i) => {
+          setTimeout(() => { px.style.opacity = '0'; }, i * stepMs * 0.5);
+        });
+        setTimeout(() => { gtcBusy = false; }, totalMs * 0.5 + 100);
+      }, totalMs * 0.5);
+    }
+
+    const gtcInterval = setInterval(gtcDissolve, 3000);
+
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
     };
@@ -832,6 +894,7 @@ export default function PortfolioScript() {
       document.removeEventListener('keydown', onEscapeKey);
       if (roleInterval) clearInterval(roleInterval);
       if (morphInterval) clearInterval(morphInterval);
+      if (gtcInterval) clearInterval(gtcInterval);
       if (galleryRoot) galleryRoot.unmount();
       revealObs.disconnect();
     };
