@@ -68,20 +68,21 @@ export default function PortfolioScript() {
         galleryRoot.render(
           <DomeGallery
             images={galleryImages}
-            fit={0.68}
-            minRadius={340}
-            maxRadius={720}
-            padFactor={0.1}
+            fit={0.72}
+            minRadius={320}
+            maxRadius={700}
+            padFactor={0.08}
             overlayBlurColor="#04060e"
             grayscale={false}
             segments={26}
-            dragDampening={1.6}
-            dragSensitivity={22}
-            enlargeTransitionMs={260}
+            dragDampening={0.92}
+            dragSensitivity={14}
+            maxVerticalRotationDeg={35}
+            enlargeTransitionMs={320}
             imageBorderRadius="6px"
             openedImageBorderRadius="8px"
-            openedImageWidth="440px"
-            openedImageHeight="320px"
+            openedImageWidth="480px"
+            openedImageHeight="340px"
           />
         );
       }
@@ -100,6 +101,16 @@ export default function PortfolioScript() {
         if (e.target === galleryModal) closeGalleryModal();
       });
     }
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.project-card, .cert-card, .ach-card, .skill-card, .exp-entry, .timeline-item');
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('reveal-el', 'revealed'); }
+        else { e.target.classList.add('reveal-el'); e.target.classList.remove('revealed'); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => { el.classList.add('reveal-el'); revealObs.observe(el); });
 
     const canvas = document.getElementById('c') as HTMLCanvasElement;
     if (!canvas) return;
@@ -822,6 +833,7 @@ export default function PortfolioScript() {
       if (roleInterval) clearInterval(roleInterval);
       if (morphInterval) clearInterval(morphInterval);
       if (galleryRoot) galleryRoot.unmount();
+      revealObs.disconnect();
     };
   }, []);
 

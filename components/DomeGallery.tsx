@@ -162,10 +162,10 @@ export default function DomeGallery({
   }, []);
 
   const startInertia = useCallback((vx: number, vy: number) => {
-    let vX = clamp(vx, -1.4, 1.4) * 80, vY = clamp(vy, -1.4, 1.4) * 80;
+    let vX = clamp(vx, -2.0, 2.0) * 100, vY = clamp(vy, -2.0, 2.0) * 100;
     let frames = 0;
-    const d = clamp(dragDampening ?? 0.6, 0, 1);
-    const frictionMul = 0.94 + 0.055 * d, stopThreshold = 0.015 - 0.01 * d, maxFrames = Math.round(90 + 270 * d);
+    const d = clamp(dragDampening ?? 0.92, 0, 1);
+    const frictionMul = 0.97 + 0.025 * d, stopThreshold = 0.008 - 0.005 * d, maxFrames = Math.round(120 + 360 * d);
     const step = () => {
       vX *= frictionMul; vY *= frictionMul;
       if ((Math.abs(vX) < stopThreshold && Math.abs(vY) < stopThreshold) || ++frames > maxFrames) { inertiaRAF.current = null; return; }
