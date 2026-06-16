@@ -102,14 +102,16 @@ export default function PortfolioScript() {
       });
     }
 
-    // Scroll reveal
-    const revealEls = document.querySelectorAll('.project-card, .cert-card, .ach-card, .skill-card, .exp-entry, .timeline-item');
+    // Scroll reveal — trigger once and unobserve (no jank from constant re-triggering)
+    const revealEls = document.querySelectorAll('.project-card, .cert-card, .ach-card, .skill-card, .exp-entry, .timeline-item, .proj-card, .exp-item');
     const revealObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('reveal-el', 'revealed'); }
-        else { e.target.classList.add('reveal-el'); e.target.classList.remove('revealed'); }
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target); // fire once, stop watching = no scroll jank
+        }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
     revealEls.forEach(el => { el.classList.add('reveal-el'); revealObs.observe(el); });
 
     const canvas = document.getElementById('c') as HTMLCanvasElement;
@@ -118,9 +120,10 @@ export default function PortfolioScript() {
     if (!ctx) return;
     const reticle = document.getElementById('reticle') as HTMLElement | null;
     
+    const isTouchDevice = ('ontouchstart' in window) || window.matchMedia('(hover: none)').matches;
     let W, H, hexes = [], particles = [], trails = [];
-    const numParticles = 60;
-    const R = 22;
+    const numParticles = isTouchDevice ? 20 : 60; // fewer particles on mobile = huge CPU saving
+    const R = isTouchDevice ? 28 : 22;            // larger hexes on mobile = fewer total hexes
     const HW = Math.sqrt(3) * R;
     const RH = 1.5 * R;
     let mouse = { x: -9999, y: -9999, px: -9999, py: -9999, down: false };
@@ -283,13 +286,13 @@ export default function PortfolioScript() {
     
           ctx.translate(gX, gY);
           hexPath();
-          ctx.shadowBlur=12*I;
-          ctx.shadowColor=`hsla(${H},100%,50%,${I})`;
+          if (!isMobile) { ctx.shadowBlur=12*I; ctx.shadowColor=`hsla(${H},100%,50%,${I})`; }
           ctx.fillStyle=`hsla(${H},100%,50%,${I*0.95})`;
           ctx.fill();
           ctx.strokeStyle=`hsla(${H},100%,90%,${I})`;
           ctx.lineWidth=1.5;
           ctx.stroke();
+          ctx.shadowBlur=0;
     
           if(Math.abs(gX)>2){
             ctx.translate(-gX*2, -gY*0.5); 
@@ -342,14 +345,20 @@ export default function PortfolioScript() {
           ctx.fill();ctx.stroke();
         }else{
           hexPath();
-          ctx.shadowBlur=idle*60;ctx.shadowColor=`rgba(80,140,220,${idle*4})`;
+          // shadowBlur is the most expensive canvas op — skip it on mobile, keep subtle on desktop
+          if (!isMobile && idle > 0.005) {
+            ctx.shadowBlur=idle*60;ctx.shadowColor=`rgba(80,140,220,${idle*4})`;
+          } else {
+            ctx.shadowBlur=0;
+          }
           ctx.strokeStyle=`rgba(60,90,140,${0.15+idle*3})`;ctx.lineWidth=0.7;
-          ctx.fillStyle=`rgb(10, 14, 28)`; 
+          ctx.fillStyle=`rgb(10, 14, 28)`;
           ctx.fill();
-          ctx.fillStyle=`rgba(20, 30, 50, ${idle})`; 
+          ctx.fillStyle=`rgba(20, 30, 50, ${idle})`;
           ctx.fill();
           ctx.stroke();
-          if(this.innerRing){ctx.save();ctx.scale(0.55,0.55);hexPath();ctx.strokeStyle='rgba(80,130,200,0.12)';ctx.lineWidth=0.5;ctx.stroke();ctx.restore();}
+          ctx.shadowBlur=0; // always reset after use
+          if(!isMobile && this.innerRing){ctx.save();ctx.scale(0.55,0.55);hexPath();ctx.strokeStyle='rgba(80,130,200,0.12)';ctx.lineWidth=0.5;ctx.stroke();ctx.restore();}
         }
         ctx.restore();
       }
@@ -370,37 +379,73 @@ export default function PortfolioScript() {
     
     function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;buildGrid();}
     
+    // ── PERFORMANCE: detect mobile, throttle + pause when off-screen ──
+    const isMobile = window.matchMedia('(hover: none)').matches || window.innerWidth < 769;
+    const TARGET_FPS = isMobile ? 30 : 60;
+    const FRAME_MS = 1000 / TARGET_FPS;
+    let lastFrameTs = 0;
+    let canvasVisible = true; // track if canvas is in viewport
+
+    // Pause canvas when the wrapper scrolls past the hero
+    const wrapper = document.getElementById('portfolio-wrapper');
+    function onWrapperScroll() {
+      // Canvas is fixed, so it's always "visible" visually, but once user
+      // scrolls > 1 full viewport height the hex effect is hidden behind content
+      canvasVisible = (wrapper ? wrapper.scrollTop : window.scrollY) < window.innerHeight * 0.9;
+    }
+    if (wrapper) wrapper.addEventListener('scroll', onWrapperScroll, { passive: true });
+    else window.addEventListener('scroll', onWrapperScroll, { passive: true });
+
+    // Page visibility API — stop when tab is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { canvasVisible = false; }
+      else { canvasVisible = (wrapper ? wrapper.scrollTop : window.scrollY) < window.innerHeight * 0.9; }
+    });
+
     function animate(ts){
       rafId = requestAnimationFrame(animate);
-      
+
+      // Skip frame if canvas is covered or tab hidden
+      if (!canvasVisible) return;
+
+      // Throttle to TARGET_FPS
+      if (ts - lastFrameTs < FRAME_MS) return;
+      lastFrameTs = ts;
+
       ctx.fillStyle='#060812';ctx.fillRect(0,0,W,H);
       const hues = getThemeHues();
       
+      // ── particles: skip O(n²) neighbour lines on mobile ──
       for (let i = 0; i < particles.length; i++) {
         particles[i].update();
         ctx.beginPath();
         ctx.arc(particles[i].x, particles[i].y, 1.2, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${hues.a}, 100%, 50%, 0.4)`; 
+        ctx.fillStyle = `hsla(${hues.a}, 100%, 50%, 0.4)`;
         ctx.fill();
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < 15000) { 
-            const alpha = 1 - Math.sqrt(distSq) / 122.47; 
-            ctx.beginPath();
-            ctx.strokeStyle = `hsla(${hues.a}, 100%, 50%, ${alpha * 0.3})`;
-            ctx.lineWidth = 1;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
+
+        if (!isMobile) {
+          // desktop: draw neighbour connecting lines (expensive O(n²), fine at 60fps)
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 15000) {
+              const alpha = 1 - Math.sqrt(distSq) / 122.47;
+              ctx.beginPath();
+              ctx.strokeStyle = `hsla(${hues.a}, 100%, 50%, ${alpha * 0.3})`;
+              ctx.lineWidth = 1;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
           }
         }
+
         const mDx = mouse.x - particles[i].x;
         const mDy = mouse.y - particles[i].y;
         const mDistSq = mDx * mDx + mDy * mDy;
         if (mDistSq < 20000) {
-          const alpha = 1 - Math.sqrt(mDistSq) / 141.42; 
+          const alpha = 1 - Math.sqrt(mDistSq) / 141.42;
           ctx.beginPath();
           ctx.strokeStyle = `hsla(${hues.p}, 100%, 50%, ${alpha * 0.5})`;
           ctx.lineWidth = 1.2;
@@ -430,11 +475,19 @@ export default function PortfolioScript() {
     const onMouseUp = ()=>mouse.down=false;
     const onMouseLeave = ()=>{mouse.x=-9999;mouse.y=-9999; if(reticle) reticle.style.opacity='0';};
     
-    window.addEventListener('resize',onResize);
-    window.addEventListener('mousemove',onMouseMove);
-    window.addEventListener('mousedown',onMouseDown);
-    window.addEventListener('mouseup',onMouseUp);
-    window.addEventListener('mouseleave',onMouseLeave);
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('mousedown', onMouseDown, { passive: true });
+    window.addEventListener('mouseup', onMouseUp, { passive: true });
+    window.addEventListener('mouseleave', onMouseLeave, { passive: true });
+    // Add touch support for canvas interaction on mobile
+    if (isTouchDevice) {
+      canvas.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        mouse.x = t.clientX; mouse.y = t.clientY;
+      }, { passive: true });
+      canvas.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; }, { passive: true });
+    }
     
     resize();
     requestAnimationFrame(animate);
@@ -442,21 +495,24 @@ export default function PortfolioScript() {
     // ============================================================================
     // 2. VANILLA TILT SYSTEM
     // ============================================================================
-    document.querySelectorAll('.tilt-card').forEach(el => {
-        el.addEventListener('mousemove', e => {
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const cx = rect.width / 2;
-            const cy = rect.height / 2;
-            const rx = -(y - cy) / 20; 
-            const ry = (x - cx) / 20;
-            el.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02, 1.02, 1.02)`;
-        });
-        el.addEventListener('mouseleave', () => {
-            el.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-        });
-    });
+    // Only attach 3D tilt on devices with a real mouse — saves pointless work on touch
+    if (!isTouchDevice) {
+      document.querySelectorAll('.tilt-card').forEach(el => {
+          el.addEventListener('mousemove', e => {
+              const rect = el.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              const cx = rect.width / 2;
+              const cy = rect.height / 2;
+              const rx = -(y - cy) / 20;
+              const ry = (x - cx) / 20;
+              el.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02, 1.02, 1.02)`;
+          });
+          el.addEventListener('mouseleave', () => {
+              el.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+          });
+      });
+    }
     
     // ============================================================================
     // 3. TEXT SCRAMBLE ANIMATION
@@ -804,28 +860,17 @@ export default function PortfolioScript() {
     }
 
     function gtcDissolve() {
-      if (!gtcGrid || !gtcImg || gtcBusy) return;
+      if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
-      const pixels = Array.from(gtcGrid.children) as HTMLElement[];
-      const shuffled = [...pixels].sort(() => Math.random() - 0.5);
-      const totalMs = 400;
-      const stepMs = totalMs / pixels.length;
-
-      // Show pixels (cover image)
-      shuffled.forEach((px, i) => {
-        setTimeout(() => { px.style.opacity = '1'; }, i * stepMs * 0.5);
-      });
-
-      // Swap image at midpoint, then reveal
+      // Use CSS opacity transition instead of 64 setTimeouts — much smoother
+      gtcImg.style.transition = 'opacity 0.35s ease';
+      gtcImg.style.opacity = '0';
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
         gtcImg.src = gtcImages[gtcIdx];
-        const shuffled2 = [...pixels].sort(() => Math.random() - 0.5);
-        shuffled2.forEach((px, i) => {
-          setTimeout(() => { px.style.opacity = '0'; }, i * stepMs * 0.5);
-        });
-        setTimeout(() => { gtcBusy = false; }, totalMs * 0.5 + 100);
-      }, totalMs * 0.5);
+        gtcImg.style.opacity = '1';
+        setTimeout(() => { gtcBusy = false; }, 400);
+      }, 360);
     }
 
     const gtcInterval = setInterval(gtcDissolve, 3000);
