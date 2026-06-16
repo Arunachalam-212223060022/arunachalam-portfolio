@@ -842,37 +842,41 @@ export default function PortfolioScript() {
     ];
     let gtcIdx = 0;
     let gtcBusy = false;
-    // ── HEX TILE TRANSITION — futuristic scan wipe ─────────────────
-    const HEX_COLS = 16;
-    const HEX_ROWS = 8;
+    // ── HEX TILE TRANSITION — precise honeycomb flip ──────────────
+    // Fix image to always fill container correctly
+    if (gtcImg) {
+      gtcImg.style.cssText += ';width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;top:0;left:0;';
+    }
+
+    // Build a true honeycomb: flat-top hexagons, pixel-perfect sizing
+    const HEX_COLS = 12;
+    const HEX_ROWS = 6;
     const hexTiles: HTMLElement[] = [];
-    const hexCanvas = document.createElement('canvas');
 
     if (gtcGrid) {
       gtcGrid.innerHTML = '';
       gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;';
-      const tileW = 100 / HEX_COLS;
-      const tileH = 100 / HEX_ROWS;
 
       for (let r = 0; r < HEX_ROWS; r++) {
         for (let c = 0; c < HEX_COLS; c++) {
           const tile = document.createElement('div');
-          const offsetX = r % 2 === 1 ? tileW * 0.5 : 0;
-          // Each tile gets a unique index-based color for the scanline effect
-          const isAccentAlt = (r + c) % 5 === 0;
+          // Pointy-top hex: offset every odd row by half a cell width
+          const colW  = 100 / HEX_COLS;
+          const rowH  = 100 / HEX_ROWS;
+          const offX  = r % 2 === 1 ? colW * 0.5 : 0;
+
           tile.style.cssText = [
             'position:absolute',
-            `width:${tileW + 1}%`,
-            `height:${tileH + 2}%`,
-            `left:${c * tileW + offsetX - 0.5}%`,
-            `top:${r * tileH - 1}%`,
-            'clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-            // Solid opaque — no bleed-through
-            isAccentAlt
-              ? 'background:#060812;border:1px solid rgba(var(--accent-rgb),0.6)'
-              : 'background:#060812',
+            `width:${colW + 0.8}%`,
+            `height:${rowH + 1.5}%`,
+            `left:${c * colW + offX}%`,
+            `top:${r * rowH}%`,
+            // Correct pointy-top hex clip
+            'clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)',
+            'background:#060812',
+            'border:1px solid rgba(var(--accent-rgb),0)',
             'opacity:0',
-            'transform:scale(0) rotate(30deg)',
+            'transform:scale(0.2)',
             'transition:none',
             'will-change:transform,opacity',
           ].join(';');
@@ -886,56 +890,60 @@ export default function PortfolioScript() {
       if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
 
-      // Sort tiles left-to-right column scan (like a display refresh)
-      const cols = HEX_COLS;
-      const rows = HEX_ROWS;
-      const order: number[] = [];
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          order.push(r * cols + c);
-        }
-      }
+      // Wave from center outward — more cinematic than left-to-right
+      const cx = HEX_COLS / 2;
+      const cy = HEX_ROWS / 2;
+      const indexed = hexTiles.map((el, i) => {
+        const r = Math.floor(i / HEX_COLS);
+        const c = i % HEX_COLS;
+        const dist = Math.sqrt((c - cx) ** 2 + (r - cy) ** 2);
+        return { el, dist };
+      });
+      // Sort by distance — center tiles first
+      indexed.sort((a, b) => a.dist - b.dist);
 
-      const STAGGER  = 12;   // ms — tight stagger = fast scan feel
-      const TILE_IN  = 160;  // tile pop-in duration
-      const HOLD     = 100;
-      const TILE_OUT = 120;
+      const STAGGER  = 22;   // ms between each tile in wave
+      const TILE_IN  = 220;  // ms per tile enter
+      const HOLD     = 150;  // ms hold before swap
+      const TILE_OUT = 180;  // ms per tile exit
 
-      // Phase 1 — column scan wipe IN (left to right)
-      order.forEach((idx, i) => {
+      // ── Phase 1: wave IN from center ──
+      indexed.forEach(({ el }, i) => {
         setTimeout(() => {
-          const t = hexTiles[idx];
-          t.style.transition = `transform ${TILE_IN}ms cubic-bezier(0.22,1,0.36,1), opacity ${TILE_IN * 0.6}ms ease`;
-          t.style.opacity = '1';
-          t.style.transform = 'scale(1.02) rotate(0deg)';
+          el.style.transition = `transform ${TILE_IN}ms cubic-bezier(0.16,1,0.3,1), opacity ${TILE_IN * 0.5}ms ease, border-color 0.15s ease`;
+          el.style.opacity    = '1';
+          el.style.transform  = 'scale(1)';
+          el.style.borderColor = 'rgba(var(--accent-rgb),0.35)';
         }, i * STAGGER);
       });
 
-      // Phase 2 — swap image while fully covered
-      const coverTime = order.length * STAGGER + TILE_IN + HOLD;
+      // ── Phase 2: swap image while fully covered ──
+      const coverTime = indexed.length * STAGGER + TILE_IN + HOLD;
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
+        const img = new Image();
+        img.onload = () => { gtcImg.src = gtcImages[gtcIdx]; };
+        img.src = gtcImages[gtcIdx];
         gtcImg.src = gtcImages[gtcIdx];
       }, coverTime);
 
-      // Phase 3 — column scan wipe OUT (right to left)
+      // ── Phase 3: wave OUT from edges inward (reversed) ──
       setTimeout(() => {
-        const outOrder = [...order].reverse();
-        outOrder.forEach((idx, i) => {
+        [...indexed].reverse().forEach(({ el }, i) => {
           setTimeout(() => {
-            const t = hexTiles[idx];
-            t.style.transition = `transform ${TILE_OUT}ms ease-in, opacity ${TILE_OUT}ms ease-in`;
-            t.style.opacity = '0';
-            t.style.transform = 'scale(0) rotate(-30deg)';
+            el.style.transition = `transform ${TILE_OUT}ms cubic-bezier(0.7,0,1,1), opacity ${TILE_OUT}ms ease`;
+            el.style.opacity    = '0';
+            el.style.transform  = 'scale(0.2)';
+            el.style.borderColor = 'rgba(var(--accent-rgb),0)';
           }, i * STAGGER);
         });
       }, coverTime + HOLD);
 
-      const total = coverTime + HOLD + order.length * STAGGER + TILE_OUT + 400;
+      const total = coverTime + HOLD + indexed.length * STAGGER + TILE_OUT + 300;
       setTimeout(() => { gtcBusy = false; }, total);
     }
 
-    const gtcInterval = setInterval(gtcDissolve, 6000); // 6s — scan wipe takes ~4s
+    const gtcInterval = setInterval(gtcDissolve, 7500); // 7.5s — wave anim ~5.5s
 
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
