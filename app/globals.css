@@ -810,3 +810,103 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
   opacity: 1;
 }
 .nav-drawer-link.active { color: var(--accent); }
+
+/* ============================================================ */
+/* PCB TRACE SECTION DIVIDER */
+/* ============================================================ */
+.sec-divider {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  margin: 48px 0;
+  position: relative;
+}
+@media (max-width: 480px) { .sec-divider { margin: 32px 0; } }
+
+.sd-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(var(--accent-rgb), 0.15) 10%,
+    rgba(var(--accent-rgb), 0.5) 40%,
+    rgba(var(--accent-rgb), 0.5) 60%,
+    rgba(var(--accent-rgb), 0.15) 90%,
+    transparent 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scan pulse that sweeps across */
+.sd-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(var(--accent-rgb), 0.8),
+    transparent
+  );
+  animation: sd-scan 3s ease-in-out infinite;
+}
+.sec-divider:nth-child(odd) .sd-line::after  { animation-duration: 3s; }
+.sec-divider:nth-child(even) .sd-line::after { animation-duration: 4.5s; animation-delay: -1.5s; }
+
+@keyframes sd-scan {
+  0%   { left: -40%; }
+  100% { left: 140%; }
+}
+
+/* Via dots in the center */
+.sd-vias {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.sd-via {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--accent-rgb), 0.6);
+  background: rgba(var(--accent-rgb), 0.1);
+  position: relative;
+  display: block;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+/* Inner dot — like a PCB drill hole */
+.sd-via::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+/* Staggered pulse on the vias */
+.sd-via:nth-child(1) { animation: sd-via-pulse 2.4s ease-in-out infinite 0s; }
+.sd-via:nth-child(2) { animation: sd-via-pulse 2.4s ease-in-out infinite 0.4s; }
+.sd-via:nth-child(3) { animation: sd-via-pulse 2.4s ease-in-out infinite 0.8s; }
+
+@keyframes sd-via-pulse {
+  0%, 100% {
+    border-color: rgba(var(--accent-rgb), 0.3);
+    box-shadow: none;
+  }
+  50% {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6), 0 0 2px var(--accent) inset;
+  }
+}
+
+/* Remove old wave-divider styles if any remain */
+.wave-divider { display: none; }
