@@ -842,10 +842,11 @@ export default function PortfolioScript() {
     ];
     let gtcIdx = 0;
     let gtcBusy = false;
-    // ── HEX TILE TRANSITION ────────────────────────────────────────
-    const HEX_COLS = 14;
-    const HEX_ROWS = 7;
+    // ── HEX TILE TRANSITION — futuristic scan wipe ─────────────────
+    const HEX_COLS = 16;
+    const HEX_ROWS = 8;
     const hexTiles: HTMLElement[] = [];
+    const hexCanvas = document.createElement('canvas');
 
     if (gtcGrid) {
       gtcGrid.innerHTML = '';
@@ -856,20 +857,23 @@ export default function PortfolioScript() {
       for (let r = 0; r < HEX_ROWS; r++) {
         for (let c = 0; c < HEX_COLS; c++) {
           const tile = document.createElement('div');
-          tile.className = 'gtc-hex-tile';
           const offsetX = r % 2 === 1 ? tileW * 0.5 : 0;
+          // Each tile gets a unique index-based color for the scanline effect
+          const isAccentAlt = (r + c) % 5 === 0;
           tile.style.cssText = [
             'position:absolute',
-            `width:${tileW + 0.5}%`,
-            `height:${tileH + 1}%`,
-            `left:${c * tileW + offsetX - 0.25}%`,
-            `top:${r * tileH - 0.5}%`,
+            `width:${tileW + 1}%`,
+            `height:${tileH + 2}%`,
+            `left:${c * tileW + offsetX - 0.5}%`,
+            `top:${r * tileH - 1}%`,
             'clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+            // Solid opaque — no bleed-through
+            isAccentAlt
+              ? 'background:#060812;border:1px solid rgba(var(--accent-rgb),0.6)'
+              : 'background:#060812',
             'opacity:0',
-            'transform:scale(0)',
+            'transform:scale(0) rotate(30deg)',
             'transition:none',
-            // Use theme accent color only — no amber/red
-            'background:rgba(var(--accent-rgb),0.92)',
             'will-change:transform,opacity',
           ].join(';');
           gtcGrid.appendChild(tile);
@@ -882,44 +886,56 @@ export default function PortfolioScript() {
       if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
 
-      const order = hexTiles.map((_, i) => i).sort(() => Math.random() - 0.5);
-      const STAGGER   = 18;  // ms per tile
-      const TILE_DUR  = 200; // each tile transition duration
-      const HOLD      = 80;  // hold covered before swap
+      // Sort tiles left-to-right column scan (like a display refresh)
+      const cols = HEX_COLS;
+      const rows = HEX_ROWS;
+      const order: number[] = [];
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          order.push(r * cols + c);
+        }
+      }
 
-      // Phase 1 — tiles pop in
+      const STAGGER  = 12;   // ms — tight stagger = fast scan feel
+      const TILE_IN  = 160;  // tile pop-in duration
+      const HOLD     = 100;
+      const TILE_OUT = 120;
+
+      // Phase 1 — column scan wipe IN (left to right)
       order.forEach((idx, i) => {
         setTimeout(() => {
-          hexTiles[idx].style.transition = `transform ${TILE_DUR}ms cubic-bezier(0.34,1.56,0.64,1), opacity ${TILE_DUR}ms ease`;
-          hexTiles[idx].style.opacity = '1';
-          hexTiles[idx].style.transform = 'scale(1.05)';
+          const t = hexTiles[idx];
+          t.style.transition = `transform ${TILE_IN}ms cubic-bezier(0.22,1,0.36,1), opacity ${TILE_IN * 0.6}ms ease`;
+          t.style.opacity = '1';
+          t.style.transform = 'scale(1.02) rotate(0deg)';
         }, i * STAGGER);
       });
 
-      // Phase 2 — swap image cleanly while covered
-      const coverTime = order.length * STAGGER + TILE_DUR + HOLD;
+      // Phase 2 — swap image while fully covered
+      const coverTime = order.length * STAGGER + TILE_IN + HOLD;
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
         gtcImg.src = gtcImages[gtcIdx];
       }, coverTime);
 
-      // Phase 3 — tiles pop out revealing new image
+      // Phase 3 — column scan wipe OUT (right to left)
       setTimeout(() => {
-        const revOrder = [...order].reverse();
-        revOrder.forEach((idx, i) => {
+        const outOrder = [...order].reverse();
+        outOrder.forEach((idx, i) => {
           setTimeout(() => {
-            hexTiles[idx].style.transition = `transform ${TILE_DUR * 0.8}ms ease-in, opacity ${TILE_DUR * 0.8}ms ease-in`;
-            hexTiles[idx].style.opacity = '0';
-            hexTiles[idx].style.transform = 'scale(0)';
+            const t = hexTiles[idx];
+            t.style.transition = `transform ${TILE_OUT}ms ease-in, opacity ${TILE_OUT}ms ease-in`;
+            t.style.opacity = '0';
+            t.style.transform = 'scale(0) rotate(-30deg)';
           }, i * STAGGER);
         });
       }, coverTime + HOLD);
 
-      const total = coverTime + HOLD + order.length * STAGGER + TILE_DUR + 300;
+      const total = coverTime + HOLD + order.length * STAGGER + TILE_OUT + 400;
       setTimeout(() => { gtcBusy = false; }, total);
     }
 
-    const gtcInterval = setInterval(gtcDissolve, 5000); // 5s — hex anim takes ~3.5s
+    const gtcInterval = setInterval(gtcDissolve, 6000); // 6s — scan wipe takes ~4s
 
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }

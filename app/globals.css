@@ -914,14 +914,12 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
 /* ============================================================ */
 /* HEX TILE GALLERY TRANSITION */
 /* ============================================================ */
-.gtc-hex-tile {
-  will-change: transform, opacity;
-  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
-}
-/* Subtle two-tone — 80% accent, 20% accent-alt, no hard colors */
-.gtc-hex-tile:nth-child(5n) {
-  background: rgba(var(--accent-alt-rgb), 0.85) !important;
-  box-shadow: 0 0 6px rgba(var(--accent-alt-rgb), 0.5);
+/* Base tile — solid dark so image never bleeds through */
+div[style*="rotate(30deg)"],
+div[style*="rotate(0deg)"],
+div[style*="rotate(-30deg)"] {
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4),
+              inset 0 0 12px rgba(var(--accent-rgb), 0.08);
 }
 /* Remove old pixel grid styles */
 .gtc-pixel { display: none; }
