@@ -910,3 +910,23 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
 
 /* Remove old wave-divider styles if any remain */
 .wave-divider { display: none; }
+
+/* ============================================================ */
+/* HEX TILE GALLERY TRANSITION */
+/* ============================================================ */
+.gtc-hex-tile {
+  will-change: opacity, transform;
+  /* accent-alt for a dual-tone hex flash */
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6);
+}
+/* Alternate hex tiles get accent-alt color for visual depth */
+.gtc-hex-tile:nth-child(odd) {
+  background: var(--accent) !important;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.7);
+}
+.gtc-hex-tile:nth-child(even) {
+  background: var(--accent-alt) !important;
+  box-shadow: 0 0 12px rgba(var(--accent-alt-rgb), 0.7);
+}
+/* Remove old pixel grid styles */
+.gtc-pixel { display: none; }
