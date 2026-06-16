@@ -915,18 +915,13 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
 /* HEX TILE GALLERY TRANSITION */
 /* ============================================================ */
 .gtc-hex-tile {
-  will-change: opacity, transform;
-  /* accent-alt for a dual-tone hex flash */
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6);
+  will-change: transform, opacity;
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
 }
-/* Alternate hex tiles get accent-alt color for visual depth */
-.gtc-hex-tile:nth-child(odd) {
-  background: var(--accent) !important;
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.7);
-}
-.gtc-hex-tile:nth-child(even) {
-  background: var(--accent-alt) !important;
-  box-shadow: 0 0 12px rgba(var(--accent-alt-rgb), 0.7);
+/* Subtle two-tone — 80% accent, 20% accent-alt, no hard colors */
+.gtc-hex-tile:nth-child(5n) {
+  background: rgba(var(--accent-alt-rgb), 0.85) !important;
+  box-shadow: 0 0 6px rgba(var(--accent-alt-rgb), 0.5);
 }
 /* Remove old pixel grid styles */
 .gtc-pixel { display: none; }

@@ -843,31 +843,35 @@ export default function PortfolioScript() {
     let gtcIdx = 0;
     let gtcBusy = false;
     // ── HEX TILE TRANSITION ────────────────────────────────────────
-    const HEX_COLS = 10;
-    const HEX_ROWS = 6;
+    const HEX_COLS = 14;
+    const HEX_ROWS = 7;
     const hexTiles: HTMLElement[] = [];
 
     if (gtcGrid) {
       gtcGrid.innerHTML = '';
-      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;';
+      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;';
+      const tileW = 100 / HEX_COLS;
+      const tileH = 100 / HEX_ROWS;
+
       for (let r = 0; r < HEX_ROWS; r++) {
         for (let c = 0; c < HEX_COLS; c++) {
           const tile = document.createElement('div');
           tile.className = 'gtc-hex-tile';
-          // Offset every other column for true hex grid
-          const offsetY = c % 2 === 1 ? 50 / HEX_ROWS : 0;
-          tile.style.cssText = `
-            position:absolute;
-            width:${110 / HEX_COLS}%;
-            padding-bottom:${110 / HEX_COLS * 1.155}%;
-            left:${(c / HEX_COLS) * 100}%;
-            top:calc(${(r / HEX_ROWS) * 100}% + ${offsetY}%);
-            clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
-            background:var(--accent);
-            opacity:0;
-            transform:scale(0.1);
-            transition:opacity 0.18s ease, transform 0.18s ease;
-          `;
+          const offsetX = r % 2 === 1 ? tileW * 0.5 : 0;
+          tile.style.cssText = [
+            'position:absolute',
+            `width:${tileW + 0.5}%`,
+            `height:${tileH + 1}%`,
+            `left:${c * tileW + offsetX - 0.25}%`,
+            `top:${r * tileH - 0.5}%`,
+            'clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+            'opacity:0',
+            'transform:scale(0)',
+            'transition:none',
+            // Use theme accent color only — no amber/red
+            'background:rgba(var(--accent-rgb),0.92)',
+            'will-change:transform,opacity',
+          ].join(';');
           gtcGrid.appendChild(tile);
           hexTiles.push(tile);
         }
@@ -878,42 +882,41 @@ export default function PortfolioScript() {
       if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
 
-      // Shuffle tile order for organic reveal
       const order = hexTiles.map((_, i) => i).sort(() => Math.random() - 0.5);
-      const STAGGER = 28;   // ms between each tile
-      const HOLD    = 120;  // ms to hold fully covered before swap
+      const STAGGER   = 18;  // ms per tile
+      const TILE_DUR  = 200; // each tile transition duration
+      const HOLD      = 80;  // hold covered before swap
 
-      // Phase 1: hex tiles scale in (cover image)
-      order.forEach((tileIdx, i) => {
+      // Phase 1 — tiles pop in
+      order.forEach((idx, i) => {
         setTimeout(() => {
-          hexTiles[tileIdx].style.opacity = '1';
-          hexTiles[tileIdx].style.transform = 'scale(1.15)';
+          hexTiles[idx].style.transition = `transform ${TILE_DUR}ms cubic-bezier(0.34,1.56,0.64,1), opacity ${TILE_DUR}ms ease`;
+          hexTiles[idx].style.opacity = '1';
+          hexTiles[idx].style.transform = 'scale(1.05)';
         }, i * STAGGER);
       });
 
-      // Phase 2: swap image when fully covered
-      const coverTime = order.length * STAGGER + HOLD;
+      // Phase 2 — swap image cleanly while covered
+      const coverTime = order.length * STAGGER + TILE_DUR + HOLD;
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
-        // Preload next image for instant swap
-        const nextImg = new Image();
-        nextImg.src = gtcImages[gtcIdx];
-        nextImg.onload = () => { gtcImg.src = gtcImages[gtcIdx]; };
         gtcImg.src = gtcImages[gtcIdx];
       }, coverTime);
 
-      // Phase 3: hex tiles scale out (reveal new image) in reverse order
-      const revealOrder = [...order].reverse();
-      revealOrder.forEach((tileIdx, i) => {
-        setTimeout(() => {
-          hexTiles[tileIdx].style.opacity = '0';
-          hexTiles[tileIdx].style.transform = 'scale(0.1)';
-        }, coverTime + HOLD + i * STAGGER);
-      });
+      // Phase 3 — tiles pop out revealing new image
+      setTimeout(() => {
+        const revOrder = [...order].reverse();
+        revOrder.forEach((idx, i) => {
+          setTimeout(() => {
+            hexTiles[idx].style.transition = `transform ${TILE_DUR * 0.8}ms ease-in, opacity ${TILE_DUR * 0.8}ms ease-in`;
+            hexTiles[idx].style.opacity = '0';
+            hexTiles[idx].style.transform = 'scale(0)';
+          }, i * STAGGER);
+        });
+      }, coverTime + HOLD);
 
-      // Done
-      const totalTime = coverTime + HOLD + order.length * STAGGER + 200;
-      setTimeout(() => { gtcBusy = false; }, totalTime);
+      const total = coverTime + HOLD + order.length * STAGGER + TILE_DUR + 300;
+      setTimeout(() => { gtcBusy = false; }, total);
     }
 
     const gtcInterval = setInterval(gtcDissolve, 5000); // 5s — hex anim takes ~3.5s
