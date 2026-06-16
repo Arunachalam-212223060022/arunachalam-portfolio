@@ -929,6 +929,65 @@ export default function PortfolioScript() {
         });
     }
     
+    // ============================================================================
+    // HEADER NAV — scroll state, active section, hamburger, smooth scroll
+    // ============================================================================
+    const header    = document.getElementById('site-header');
+    const hamburger = document.getElementById('nav-hamburger');
+    const drawer    = document.getElementById('nav-drawer');
+    const navLinks  = document.querySelectorAll<HTMLAnchorElement>('.nav-link, .nav-drawer-link');
+    const sections  = document.querySelectorAll<HTMLElement>('section[id]');
+
+    function onNavScroll() {
+      const scrollY = wrapper ? wrapper.scrollTop : window.scrollY;
+      if (header) {
+        header.classList.toggle('scrolled', scrollY > 40);
+      }
+      let current = '';
+      sections.forEach(sec => {
+        if (sec.getBoundingClientRect().top <= 90) current = sec.id;
+      });
+      navLinks.forEach(a => {
+        const sec = a.getAttribute('data-section') || (a.getAttribute('href') || '').replace('#','');
+        a.classList.toggle('active', sec === current);
+      });
+    }
+
+    if (wrapper) wrapper.addEventListener('scroll', onNavScroll, { passive: true });
+    else window.addEventListener('scroll', onNavScroll, { passive: true });
+
+    function toggleDrawer() {
+      if (!hamburger || !drawer) return;
+      const isOpen = drawer.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+    }
+    if (hamburger) hamburger.addEventListener('click', toggleDrawer);
+
+    navLinks.forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const href = a.getAttribute('href') || '';
+        const target = document.querySelector<HTMLElement>(href);
+        if (target) {
+          const top = wrapper
+            ? target.getBoundingClientRect().top + wrapper.scrollTop - 70
+            : target.getBoundingClientRect().top + window.scrollY - 70;
+          (wrapper || window).scrollTo({ top, behavior: 'smooth' });
+        }
+        drawer?.classList.remove('open');
+        hamburger?.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', e => {
+      if (header && !header.contains(e.target as Node)) {
+        drawer?.classList.remove('open');
+        hamburger?.classList.remove('open');
+      }
+    });
+
+    onNavScroll();
+
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
