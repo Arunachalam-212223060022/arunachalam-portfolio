@@ -842,91 +842,76 @@ export default function PortfolioScript() {
     ];
     let gtcIdx = 0;
     let gtcBusy = false;
-    // ── GALLERY IMAGE TRANSITION — clean crossfade ─────────────────
-    // Ensure image always fills correctly
+    // ── GALLERY TRANSITION — clean scanline fade ──────────────────
+    // Image always fills correctly
     if (gtcImg) {
-      gtcImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 0.6s ease;';
+      gtcImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;';
     }
 
-    // Build hex overlay grid — small tight hexagons, pure CSS clip-path
-    const HEX_COLS = 18;
-    const HEX_ROWS = 9;
-    const hexTiles: HTMLElement[] = [];
+    // Create a second image layer for crossfade
+    const gtcImg2 = document.createElement('img');
+    gtcImg2.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.8s ease;z-index:1;';
+    if (gtcImg && gtcImg.parentNode) {
+      gtcImg.parentNode.insertBefore(gtcImg2, gtcImg);
+      gtcImg.style.zIndex = '0';
+    }
 
+    // Scanline overlay — a single moving line effect
+    const scanEl = document.createElement('div');
+    scanEl.style.cssText = [
+      'position:absolute;inset:0;z-index:2;pointer-events:none',
+      'background:linear-gradient(180deg,transparent 0%,rgba(var(--accent-rgb),0.15) 49%,rgba(var(--accent-rgb),0.4) 50%,rgba(var(--accent-rgb),0.15) 51%,transparent 100%)',
+      'background-size:100% 200%',
+      'opacity:0',
+      'transition:opacity 0.2s ease',
+    ].join(';');
     if (gtcGrid) {
+      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;';
       gtcGrid.innerHTML = '';
-      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;display:grid;grid-template-columns:repeat(' + HEX_COLS + ',1fr);grid-template-rows:repeat(' + HEX_ROWS + ',1fr);';
-
-      for (let r = 0; r < HEX_ROWS; r++) {
-        for (let c = 0; c < HEX_COLS; c++) {
-          const tile = document.createElement('div');
-          tile.style.cssText = [
-            // Correct flat-top hexagon (wide)
-            'clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)',
-            'background:#060812',
-            'opacity:0',
-            'transform:scale(0)',
-            'transition:none',
-            'will-change:transform,opacity',
-            // Slight offset every odd row for honeycomb effect
-            r % 2 === 1 ? 'margin-left:calc(50%/' + HEX_COLS + ')' : '',
-          ].filter(Boolean).join(';');
-          gtcGrid.appendChild(tile);
-          hexTiles.push(tile);
-        }
-      }
+      gtcGrid.appendChild(scanEl);
     }
 
     function gtcDissolve() {
       if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
 
-      // Ripple from center outward
-      const cx = HEX_COLS / 2;
-      const cy = HEX_ROWS / 2;
-      const sorted = hexTiles
-        .map((el, i) => ({
-          el,
-          dist: Math.hypot(i % HEX_COLS - cx, Math.floor(i / HEX_COLS) - cy)
-        }))
-        .sort((a, b) => a.dist - b.dist);
+      gtcIdx = (gtcIdx + 1) % gtcImages.length;
+      const nextSrc = gtcImages[gtcIdx];
 
-      const STAGGER  = 16;
-      const IN_DUR   = 180;
-      const HOLD     = 100;
-      const OUT_DUR  = 140;
+      // Preload next image
+      const preload = new Image();
+      preload.onload = () => {
+        // Flash scanline
+        scanEl.style.opacity = '1';
+        scanEl.style.transition = 'background-position 0.6s ease, opacity 0.2s ease';
+        scanEl.style.backgroundPosition = '0% 100%';
 
-      // Phase 1: tiles pop IN center → edge
-      sorted.forEach(({ el }, i) => {
         setTimeout(() => {
-          el.style.transition = `transform ${IN_DUR}ms cubic-bezier(0.16,1,0.3,1),opacity ${IN_DUR * 0.5}ms ease`;
-          el.style.opacity    = '1';
-          el.style.transform  = 'scale(1)';
-        }, i * STAGGER);
-      });
+          // Set next image on overlay
+          gtcImg2.src = nextSrc;
+          gtcImg2.style.transition = 'none';
+          gtcImg2.style.opacity = '0';
 
-      // Phase 2: swap image while covered
-      const coverMs = sorted.length * STAGGER + IN_DUR + HOLD;
-      setTimeout(() => {
-        gtcIdx = (gtcIdx + 1) % gtcImages.length;
-        gtcImg.src = gtcImages[gtcIdx];
-      }, coverMs);
-
-      // Phase 3: tiles pop OUT edge → center (reverse)
-      setTimeout(() => {
-        [...sorted].reverse().forEach(({ el }, i) => {
           setTimeout(() => {
-            el.style.transition = `transform ${OUT_DUR}ms ease-in,opacity ${OUT_DUR}ms ease-in`;
-            el.style.opacity    = '0';
-            el.style.transform  = 'scale(0)';
-          }, i * STAGGER);
-        });
-      }, coverMs + HOLD);
+            // Crossfade in
+            gtcImg2.style.transition = 'opacity 0.5s ease';
+            gtcImg2.style.opacity = '1';
 
-      const total = coverMs + HOLD + sorted.length * STAGGER + OUT_DUR + 300;
-      setTimeout(() => { gtcBusy = false; }, total);
+            setTimeout(() => {
+              // Swap: copy to base, hide overlay
+              gtcImg.src = nextSrc;
+              gtcImg2.style.transition = 'none';
+              gtcImg2.style.opacity = '0';
+              scanEl.style.opacity = '0';
+              scanEl.style.backgroundPosition = '0% 0%';
+              gtcBusy = false;
+            }, 600);
+          }, 50);
+        }, 300);
+      };
+      preload.src = nextSrc;
     }
-    const gtcInterval = setInterval(gtcDissolve, 7500); // 7.5s — wave anim ~5.5s
+    const gtcInterval = setInterval(gtcDissolve, 4500); // 4.5s — crossfade is 1.5s total
 
     const onEscapeKey = (e) => {
         if(e.key === 'Escape') { closeModal(); closeLightbox(); closeGalleryModal(); }
