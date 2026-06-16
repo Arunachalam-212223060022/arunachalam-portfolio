@@ -828,15 +828,15 @@ export default function PortfolioScript() {
     const gtcImg = document.getElementById('gtc-img') as HTMLImageElement | null;
     const gtcGrid = document.getElementById('gtc-pixel-grid');
     const gtcImages = [
-      '/images/gallery/gallery_01.jpg',
-      '/images/gallery/gallery_05.jpg',
-      '/images/gallery/gallery_07.jpg',
-      '/images/gallery/gallery_08.jpg',
-      '/images/gallery/gallery_03.jpg',
-      '/images/gallery/gallery_02.jpg',
-      '/images/gallery/gallery_10.jpg',
-      '/images/gallery/gallery_06.jpg',
-      '/images/gallery/gallery_09.jpg',
+      '/images/gallery/gallery_05.jpg',   // landscape 1.33
+      '/images/gallery/gallery_07.jpg',   // landscape 1.78
+      '/images/gallery/gallery_08.jpg',   // landscape 1.26
+      '/images/gallery/gallery_02.jpg',   // landscape 2.23
+      '/images/gallery/gallery_06.jpg',   // landscape 1.78
+      '/images/gallery/gallery_09.jpg',   // landscape 1.41
+      '/images/gallery/gallery_10.jpg',   // landscape 2.01
+      '/images/gallery/gallery_11.jpg',   // landscape 1.87
+      '/images/gallery/gallery_04.jpg',   // portrait  0.56
       '/images/gallery/gallery_11.jpg',
       '/images/gallery/gallery_04.jpg',
     ];
@@ -921,10 +921,18 @@ export default function PortfolioScript() {
       const coverTime = indexed.length * STAGGER + TILE_IN + HOLD;
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
-        const img = new Image();
-        img.onload = () => { gtcImg.src = gtcImages[gtcIdx]; };
-        img.src = gtcImages[gtcIdx];
-        gtcImg.src = gtcImages[gtcIdx];
+        const nextSrc = gtcImages[gtcIdx];
+        const preload = new Image();
+        preload.onload = () => {
+          gtcImg.src = nextSrc;
+          // Adapt object-fit based on orientation
+          const isPortrait = preload.naturalWidth < preload.naturalHeight;
+          gtcImg.style.objectFit = isPortrait ? 'contain' : 'cover';
+          gtcImg.style.objectPosition = 'center';
+          gtcImg.style.background = isPortrait ? '#060812' : 'transparent';
+        };
+        preload.src = nextSrc;
+        gtcImg.src = nextSrc;
       }, coverTime);
 
       // ── Phase 3: wave OUT from edges inward (reversed) ──
