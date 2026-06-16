@@ -842,44 +842,35 @@ export default function PortfolioScript() {
     ];
     let gtcIdx = 0;
     let gtcBusy = false;
-    // ── HEX TILE TRANSITION — precise honeycomb flip ──────────────
-    // Fix image to always fill container correctly
+    // ── GALLERY IMAGE TRANSITION — clean crossfade ─────────────────
+    // Ensure image always fills correctly
     if (gtcImg) {
-      gtcImg.style.cssText += ';width:100%;height:100%;object-fit:cover;object-position:center;position:absolute;top:0;left:0;';
+      gtcImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:opacity 0.6s ease;';
     }
 
-    // Build a true honeycomb: flat-top hexagons, pixel-perfect sizing
-    const HEX_COLS = 12;
-    const HEX_ROWS = 6;
+    // Build hex overlay grid — small tight hexagons, pure CSS clip-path
+    const HEX_COLS = 18;
+    const HEX_ROWS = 9;
     const hexTiles: HTMLElement[] = [];
 
     if (gtcGrid) {
       gtcGrid.innerHTML = '';
-      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;';
+      gtcGrid.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;display:grid;grid-template-columns:repeat(' + HEX_COLS + ',1fr);grid-template-rows:repeat(' + HEX_ROWS + ',1fr);';
 
       for (let r = 0; r < HEX_ROWS; r++) {
         for (let c = 0; c < HEX_COLS; c++) {
           const tile = document.createElement('div');
-          // Pointy-top hex: offset every odd row by half a cell width
-          const colW  = 100 / HEX_COLS;
-          const rowH  = 100 / HEX_ROWS;
-          const offX  = r % 2 === 1 ? colW * 0.5 : 0;
-
           tile.style.cssText = [
-            'position:absolute',
-            `width:${colW + 0.8}%`,
-            `height:${rowH + 1.5}%`,
-            `left:${c * colW + offX}%`,
-            `top:${r * rowH}%`,
-            // Correct pointy-top hex clip
+            // Correct flat-top hexagon (wide)
             'clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)',
             'background:#060812',
-            'border:1px solid rgba(var(--accent-rgb),0)',
             'opacity:0',
-            'transform:scale(0.2)',
+            'transform:scale(0)',
             'transition:none',
             'will-change:transform,opacity',
-          ].join(';');
+            // Slight offset every odd row for honeycomb effect
+            r % 2 === 1 ? 'margin-left:calc(50%/' + HEX_COLS + ')' : '',
+          ].filter(Boolean).join(';');
           gtcGrid.appendChild(tile);
           hexTiles.push(tile);
         }
@@ -890,67 +881,51 @@ export default function PortfolioScript() {
       if (!gtcImg || gtcBusy) return;
       gtcBusy = true;
 
-      // Wave from center outward — more cinematic than left-to-right
+      // Ripple from center outward
       const cx = HEX_COLS / 2;
       const cy = HEX_ROWS / 2;
-      const indexed = hexTiles.map((el, i) => {
-        const r = Math.floor(i / HEX_COLS);
-        const c = i % HEX_COLS;
-        const dist = Math.sqrt((c - cx) ** 2 + (r - cy) ** 2);
-        return { el, dist };
-      });
-      // Sort by distance — center tiles first
-      indexed.sort((a, b) => a.dist - b.dist);
+      const sorted = hexTiles
+        .map((el, i) => ({
+          el,
+          dist: Math.hypot(i % HEX_COLS - cx, Math.floor(i / HEX_COLS) - cy)
+        }))
+        .sort((a, b) => a.dist - b.dist);
 
-      const STAGGER  = 22;   // ms between each tile in wave
-      const TILE_IN  = 220;  // ms per tile enter
-      const HOLD     = 150;  // ms hold before swap
-      const TILE_OUT = 180;  // ms per tile exit
+      const STAGGER  = 16;
+      const IN_DUR   = 180;
+      const HOLD     = 100;
+      const OUT_DUR  = 140;
 
-      // ── Phase 1: wave IN from center ──
-      indexed.forEach(({ el }, i) => {
+      // Phase 1: tiles pop IN center → edge
+      sorted.forEach(({ el }, i) => {
         setTimeout(() => {
-          el.style.transition = `transform ${TILE_IN}ms cubic-bezier(0.16,1,0.3,1), opacity ${TILE_IN * 0.5}ms ease, border-color 0.15s ease`;
+          el.style.transition = `transform ${IN_DUR}ms cubic-bezier(0.16,1,0.3,1),opacity ${IN_DUR * 0.5}ms ease`;
           el.style.opacity    = '1';
           el.style.transform  = 'scale(1)';
-          el.style.borderColor = 'rgba(var(--accent-rgb),0.35)';
         }, i * STAGGER);
       });
 
-      // ── Phase 2: swap image while fully covered ──
-      const coverTime = indexed.length * STAGGER + TILE_IN + HOLD;
+      // Phase 2: swap image while covered
+      const coverMs = sorted.length * STAGGER + IN_DUR + HOLD;
       setTimeout(() => {
         gtcIdx = (gtcIdx + 1) % gtcImages.length;
-        const nextSrc = gtcImages[gtcIdx];
-        const preload = new Image();
-        preload.onload = () => {
-          gtcImg.src = nextSrc;
-          // Adapt object-fit based on orientation
-          const isPortrait = preload.naturalWidth < preload.naturalHeight;
-          gtcImg.style.objectFit = isPortrait ? 'contain' : 'cover';
-          gtcImg.style.objectPosition = 'center';
-          gtcImg.style.background = isPortrait ? '#060812' : 'transparent';
-        };
-        preload.src = nextSrc;
-        gtcImg.src = nextSrc;
-      }, coverTime);
+        gtcImg.src = gtcImages[gtcIdx];
+      }, coverMs);
 
-      // ── Phase 3: wave OUT from edges inward (reversed) ──
+      // Phase 3: tiles pop OUT edge → center (reverse)
       setTimeout(() => {
-        [...indexed].reverse().forEach(({ el }, i) => {
+        [...sorted].reverse().forEach(({ el }, i) => {
           setTimeout(() => {
-            el.style.transition = `transform ${TILE_OUT}ms cubic-bezier(0.7,0,1,1), opacity ${TILE_OUT}ms ease`;
+            el.style.transition = `transform ${OUT_DUR}ms ease-in,opacity ${OUT_DUR}ms ease-in`;
             el.style.opacity    = '0';
-            el.style.transform  = 'scale(0.2)';
-            el.style.borderColor = 'rgba(var(--accent-rgb),0)';
+            el.style.transform  = 'scale(0)';
           }, i * STAGGER);
         });
-      }, coverTime + HOLD);
+      }, coverMs + HOLD);
 
-      const total = coverTime + HOLD + indexed.length * STAGGER + TILE_OUT + 300;
+      const total = coverMs + HOLD + sorted.length * STAGGER + OUT_DUR + 300;
       setTimeout(() => { gtcBusy = false; }, total);
     }
-
     const gtcInterval = setInterval(gtcDissolve, 7500); // 7.5s — wave anim ~5.5s
 
     const onEscapeKey = (e) => {

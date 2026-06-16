@@ -964,7 +964,7 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
   border-radius: 0;
   border-left: none;
   border-right: none;
-  height: clamp(340px, 55vw, 580px);
+  height: clamp(280px, 45vw, 480px);
 }
 #evidence .gtc-img {
   width: 100%;
