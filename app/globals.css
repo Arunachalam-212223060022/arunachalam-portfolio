@@ -677,7 +677,7 @@ section:first-child { padding-top: 140px; min-height: 100vh; display: flex; flex
 /* Logo */
 .nav-logo {
   font-family: 'Chakra Petch', sans-serif;
-  font-size: 1.15rem;
+  font-size: clamp(0.85rem, 2.5vw, 1.05rem);
   font-weight: 700;
   text-decoration: none;
   letter-spacing: 0.05em;
